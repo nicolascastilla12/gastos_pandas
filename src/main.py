@@ -1,42 +1,52 @@
-from plots import grafico_categoria, grafico_mensual
-from db import conectar_db, cargar_gastos
-from analytics import (
-    resumen_general,
-    gastos_por_categoria,
-    categoria_mayor_gasto
-)
+from db import insertar_gasto, obtener_gastos, actualizar_gasto, eliminar_gasto
+from analytics import cargar_dataframe, resumen
+from plots import grafico_categoria
 
-#  Conectar a la base de datos
-conexion = conectar_db()
+def menu():
+    print("""
+1. Insertar gasto
+2. Ver gastos
+3. Actualizar gasto
+4. Eliminar gasto
+5. Ver resumen
+6. Ver gráfica
+0. Salir
+""")
 
-#  Cargar datos
-df = cargar_gastos(conexion)
-print("\nDATOS DE GASTOS")
-print(df)
+while True:
+    menu()
+    opcion = input("Elige una opción: ")
 
-#  Resumen general
-total, promedio = resumen_general(df)
-print("\n--- RESUMEN GENERAL ---")
-print(f"Total gastado: ${total:,.0f}")
-print(f"Gasto promedio: ${promedio:,.0f}")
+    if opcion == "1":
+        fecha = input("Fecha (YYYY-MM-DD): ")
+        categoria = input("Categoría: ")
+        monto = float(input("Monto: "))
+        desc = input("Descripción: ")
+        insertar_gasto(fecha, categoria, monto, desc)
 
-#  Gastos por categoría
-gastos_categoria = gastos_por_categoria(df)
-print("\nGASTOS POR CATEGORÍA")
-print(gastos_categoria)
+    elif opcion == "2":
+        for g in obtener_gastos():
+            print(g)
 
-#  Categoría top
-categoria_top, monto_top = categoria_mayor_gasto(gastos_categoria)
-print("\nCATEGORÍA CON MÁS GASTO")
-print(f"{categoria_top}: ${monto_top:,.0f}")
+    elif opcion == "3":
+        id_gasto = int(input("ID del gasto: "))
+        nuevo_monto = float(input("Nuevo monto: "))
+        actualizar_gasto(id_gasto, nuevo_monto)
 
-grafico_categoria(gastos_categoria)
-grafico_mensual(df)
+    elif opcion == "4":
+        id_gasto = int(input("ID del gasto: "))
+        eliminar_gasto(id_gasto)
 
-#  Guardar CSV
-gastos_categoria.to_csv("data/resumen_categoria.csv")
-print("\nArchivo resumen_categoria.csv guardado")
+    elif opcion == "5":
+        df = cargar_dataframe()
+        r = resumen(df)
+        print("Total:", r["total"])
+        print("Promedio:", r["promedio"])
+        print(r["por_categoria"])
 
+    elif opcion == "6":
+        df = cargar_dataframe()
+        grafico_categoria(df)
 
-#  Cerrar conexión
-conexion.close()
+    elif opcion == "0":
+        break

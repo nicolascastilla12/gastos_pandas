@@ -1,17 +1,46 @@
 import sqlite3
-import pandas as pd
 
-def conectar_db(ruta_db="data/gastos.db"):
-    """
-    Crea y devuelve la conexión a la base de datos
-    """
-    return sqlite3.connect(ruta_db)
+DB_PATH = "data/gastos.db"
 
+def conectar():
+    return sqlite3.connect(DB_PATH)
 
-def cargar_gastos(conexion):
-    """
-    Lee la tabla gastos y la convierte en DataFrame
-    """
-    query = "SELECT * FROM gastos"
-    df = pd.read_sql_query(query, conexion)
-    return df
+# CREATE
+def insertar_gasto(fecha, categoria, monto, descripcion):
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO gastos (fecha, categoria, monto, descripcion)
+        VALUES (?, ?, ?, ?)
+    """, (fecha, categoria, monto, descripcion))
+    conn.commit()
+    conn.close()
+
+# READ
+def obtener_gastos():
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM gastos")
+    datos = cursor.fetchall()
+    conn.close()
+    return datos
+
+# UPDATE
+def actualizar_gasto(id_gasto, monto):
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE gastos SET monto = ?
+        WHERE id = ?
+    """, (monto, id_gasto))
+    conn.commit()
+    conn.close()
+
+# DELETE
+def eliminar_gasto(id_gasto):
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM gastos WHERE id = ?", (id_gasto,))
+    conn.commit()
+    conn.close()
+

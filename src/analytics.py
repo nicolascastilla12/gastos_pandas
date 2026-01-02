@@ -1,16 +1,15 @@
-def resumen_general(df):
-    total = df["monto"].sum()
-    promedio = df["monto"].mean()
+import pandas as pd
+import sqlite3
 
-    return total, promedio
+def cargar_dataframe():
+    conn = sqlite3.connect("data/gastos.db")
+    df = pd.read_sql("SELECT * FROM gastos", conn)
+    conn.close()
+    return df
 
-
-def gastos_por_categoria(df):
-    return df.groupby("categoria")["monto"].sum()
-
-
-def categoria_mayor_gasto(gastos_categoria):
-    categoria = gastos_categoria.idxmax()
-    monto = gastos_categoria.max()
-
-    return categoria, monto
+def resumen(df):
+    return {
+        "total": df["monto"].sum(),
+        "promedio": df["monto"].mean(),
+        "por_categoria": df.groupby("categoria")["monto"].sum()
+    }
