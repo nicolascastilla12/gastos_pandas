@@ -6,5 +6,5 @@ def ver_gastos():
     df = pd.read_sql_query("SELECT * FROM gastos", conexion)
     conexion.close()
 
-    print("\n📋 LISTA DE GASTOS")
+    print("\n LISTA DE GASTOS")
     print(df)

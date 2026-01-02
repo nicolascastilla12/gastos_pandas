@@ -1,3 +1,5 @@
+import sqlite3
+import pandas as pd
 from db import insertar_gasto, obtener_gastos, actualizar_gasto, eliminar_gasto
 from analytics import cargar_dataframe, resumen
 from plots import grafico_categoria
@@ -50,3 +52,40 @@ while True:
 
     elif opcion == "0":
         break
+
+# 1️ CONEXIÓN A SQLITE
+conexion = sqlite3.connect("data/gastos.db")
+
+
+ # LEER DATOS A PANDAS
+df = pd.read_sql_query("SELECT * FROM gastos", conexion)
+
+
+# TRANSFORMACIONES
+# Total y promedio
+total = df["monto"].sum()
+promedio = df["monto"].mean()
+
+# Gastos por categoría
+gastos_categoria = df.groupby("categoria")["monto"].sum().reset_index()
+
+# Gastos por mes
+df["fecha"] = pd.to_datetime(df["fecha"])
+df["mes"] = df["fecha"].dt.to_period("M")
+gastos_mes = df.groupby("mes")["monto"].sum().reset_index()
+
+
+# EXPORTAR A EXCEL (MULTI-HOJA)
+
+ruta_excel = "data/reporte_gastos.xlsx"
+
+with pd.ExcelWriter(ruta_excel, engine="openpyxl") as writer:
+    df.to_excel(writer, sheet_name="Gastos", index=False)
+    gastos_categoria.to_excel(writer, sheet_name="Por Categoria", index=False)
+    gastos_mes.to_excel(writer, sheet_name="Por Mes", index=False)
+
+print(" Archivo Excel creado correctamente:", ruta_excel)
+
+
+#  CERRAR CONEXIÓN
+conexion.close()
