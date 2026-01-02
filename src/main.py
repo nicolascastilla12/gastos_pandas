@@ -1,55 +1,42 @@
-import sqlite3
-import pandas as pd
+from plots import grafico_categoria, grafico_mensual
+from db import conectar_db, cargar_gastos
+from analytics import (
+    resumen_general,
+    gastos_por_categoria,
+    categoria_mayor_gasto
+)
 
-# =========================
-#  CONEXIÓN A LA BASE DE DATOS
-# =========================
-conexion = sqlite3.connect("data/gastos.db")
+#  Conectar a la base de datos
+conexion = conectar_db()
 
-# =========================
-# 2️ LEER DATOS DESDE SQL A PANDAS
-# =========================
-query = "SELECT * FROM gastos"
-df = pd.read_sql_query(query, conexion)
-
-print("\n DATOS DE GASTOS")
+#  Cargar datos
+df = cargar_gastos(conexion)
+print("\nDATOS DE GASTOS")
 print(df)
 
-# =========================
-# 3️⃣ RESUMEN GENERAL
-# =========================
-total = df["monto"].sum()
-promedio = df["monto"].mean()
-
+#  Resumen general
+total, promedio = resumen_general(df)
 print("\n--- RESUMEN GENERAL ---")
-print(f" Total gastado: ${total:,.0f}")
-print(f" Gasto promedio: ${promedio:,.0f}")
+print(f"Total gastado: ${total:,.0f}")
+print(f"Gasto promedio: ${promedio:,.0f}")
 
-# =========================
-#  GASTOS POR CATEGORÍA
-# =========================
-gastos_categoria = df.groupby("categoria")["monto"].sum()
-
-print("\n GASTOS POR CATEGORÍA")
+#  Gastos por categoría
+gastos_categoria = gastos_por_categoria(df)
+print("\nGASTOS POR CATEGORÍA")
 print(gastos_categoria)
 
-# =========================
-#  CATEGORÍA CON MÁS GASTO
-# =========================
-categoria_top = gastos_categoria.idxmax()
-monto_top = gastos_categoria.max()
+#  Categoría top
+categoria_top, monto_top = categoria_mayor_gasto(gastos_categoria)
+print("\nCATEGORÍA CON MÁS GASTO")
+print(f"{categoria_top}: ${monto_top:,.0f}")
 
-print("\n CATEGORÍA TOP")
-print(f"Categoría: {categoria_top}")
-print(f"Monto: ${monto_top:,.0f}")
+grafico_categoria(gastos_categoria)
+grafico_mensual(df)
 
-# =========================
-#  GUARDAR RESUMEN EN CSV
-# =========================
+#  Guardar CSV
 gastos_categoria.to_csv("data/resumen_categoria.csv")
-print("\n Archivo resumen_categoria.csv guardado")
+print("\nArchivo resumen_categoria.csv guardado")
 
-# =========================
-#  CERRAR CONEXIÓN
-# =========================
+
+#  Cerrar conexión
 conexion.close()
